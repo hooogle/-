@@ -1,0 +1,102 @@
+\documentclass{article}
+\title{Variational Information Maximizing Exploration}
+\author{Xinghu Yao}
+\date{\today}
+
+\usepackage{geometry}
+\geometry{a4paper,scale=0.8}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage{dsfont}
+\usepackage{color}
+
+
+\begin{document}
+	\maketitle
+	\section{Optimize Variational Posterior}
+	\subsection{Objective Function}
+	\noindent Minimizing $D_{\mathds{KL}}[q(\theta;\phi)\|p(\theta|D)]$ can be done as follows
+	\begin{align}
+	\phi^{'} &= \mathop{\text{argmin}}\limits_{\phi}D_{\mathds{KL}}[q(\theta;\phi)\|p(\theta|D)]\notag\\
+	&= \mathop{\text{argmin}}\limits_{\phi} -\text{ELBO}\notag\\
+	&= \mathop{\text{argmin}}\limits_{\phi}\int_{\theta \sim q(\theta;\phi)}q(\theta;\phi)log\frac{q(\theta;\phi)}{p(\theta)p(D|\theta)}\notag\\
+	&= \mathop{\text{argmin}}\limits_{\phi}D_{\mathds{KL}}[q(\theta;\phi)\|p(\theta)]-\mathds{E}_{\theta\sim q(\theta;\phi)}[log p(D|\theta)]
+	\end{align}
+	For simplicity we shall denote it as:
+	\begin{equation}
+	F(D;\theta) = D_\mathds{KL}[q(\theta;\phi)\|p(\theta)]  -\mathds{E}_{\theta\sim q(\theta;\phi)}[log p(D|\theta)]
+	\end{equation}
+	We can approximate this exact cost as:
+	\begin{equation}
+	F(D;\theta) \simeq \frac{1}{N}\sum_{i=1}^{N}log q(\theta^{(i)};\phi)-log p(\theta^{(i)}) - log p(D|\theta^{(i)})
+	\end{equation}
+	Let us now look at each of these single terms individually.
+	\subsection{Likelihood}
+	\noindent We use the softmax function to define our likelihood $p(D_i|\theta)$. So, we have the following log-likelihood function
+	\begin{equation}
+	\text{log}p(D_i|\theta) = \text{log}\frac{e^{\theta_i}}{\sum_{j=1}^ne^{\theta_j}}
+	\end{equation}
+	Thus the log-likelihood term can be seen as locally linear and the Hessian matrix can be ignored to speed the computation.
+	\subsection{Gaussian prior}
+	\noindent A popular and simple prior is the Gaussian distribution. The prior over the entire weight vector simply corresponds to the product of the individual Gaussians:
+	\begin{equation}
+	p(\theta) = \prod_{i=1}^{\Theta}\mathcal{N}(\theta_i|\mu_i,\sigma_i)
+	\end{equation}
+	And the log-prior $\text{log}p(w)$ can be expressed as follows:
+	\begin{equation}
+	\text{log}p(\theta) = \sum_{i=1}^{\Theta}\text{log}\mathcal{N}(\theta_i|\mu_i,\sigma_i)
+	\end{equation}   
+	\subsection{Variational Posterior}
+	\noindent The variational posterior on the weights is centered on the mean vector $\mu$ and has variance $\sigma^2$:
+	\begin{equation}
+	q(\theta;\phi) = \prod_{i}^{\Theta}\text{log}\mathcal{N}(\theta_i|\mu_i,\sigma_i^2)
+	\end{equation}
+	And the log-posterior $\text{log}q(\theta;\phi)$ is given by
+	\begin{equation}
+	\text{log}q(\theta;\phi) = \sum_{i}^{\Theta}\text{log}\mathcal{N}(\theta_i|\mu_i,\sigma_i^2)
+	\end{equation}
+	\subsection{Optimizer}
+	Suppose that the variational posterior is a diagonal Gaussian distribution, then a sample of the weights $\theta$ can be obtained by sampling a unit Gaussian, shifting it by a mean  $\mu$ and a standard deviation $\sigma$. We parameterise the standard deviation pointwise as $\sigma = \text{log}(1+\text{exp}(\rho))$ and so $\rho$ is always non-negative. The variational posterior parameters are $\theta = (\mu,\rho).$ Thus the transform from a sample of parameter-free noise and the variational posterior parameters that yields a posterior sample of the weight $\theta$ is: $\theta = t(\phi,\epsilon) = \mu + \text{log}(1+\text{exp}(\rho))\circ\epsilon$ where $\circ$ is pointwise multiplication. Each step of optimization proceeds as follows:\\
+	1. Sample $\epsilon \sim \mathcal{N}(0,I)$.\\
+	2. Let $\phi = \mu + \text{log}(1+\text{exp}(\rho))\circ\epsilon$.\\
+	3. Let $\theta = (\mu,\rho)$.\\
+	4. Let $f(\theta,\phi) = \text{log}q(\theta;\phi)-\text{log}p(\theta)p(D|\theta)$\\
+	5. Calculate the gradient with respect to the mean $\mu$ and standard derivation parameter $\rho$\\
+	\begin{equation}
+	\Delta_\mu = \frac{\partial f(\theta;\phi)}{\partial \theta} + \frac{\partial f(\theta;\phi)}{\partial \mu} ,\quad\quad\Delta_\rho = \frac{\partial f(\theta;\phi)}{\partial \theta}\frac{\epsilon}{1+\text{exp}(-\rho)} + \frac{\partial f(\theta;\phi)}{\partial \rho}
+	\end{equation}
+	6. Update the variational parameters
+	\begin{equation}
+	\mu \leftarrow \mu - \alpha\Delta_{\mu},\quad\quad\rho \leftarrow \rho - \alpha\Delta_{\rho} 
+	\end{equation}
+	\noindent Thus we can get the variational posterior.
+	\section{Compute  KL Divergence To Get Intrinsic Reward}
+	\noindent The next step is to compute the KL divergence in the total reward function, which can be  computed through the following minimization
+	\begin{equation}
+	\phi' = \mathop{\text{argmin}}_{\phi}\left[\overbrace{\underbrace{D_{\mathds{KL}}[q(\theta;\phi)\|q(\theta;\phi_{t-1})}_{l_{\mathds{KL}(q(\theta;\phi))}}]-\mathds{E}_{\theta\sim q(\cdot;\phi)}[\text{log}p(s_t|\xi_{t-1},a_t;\theta)]}^{l(q(\theta;\phi),s_t)}\right]\label{eq:6}
+	\end{equation}
+	The difference with the original loss is that we only update based on the latest sample. This means that instead of using the prior $p(\theta)$, we use the previous approximated posterior $q(\theta)$ for the KL term in the objective function $D_\mathds{KL}[q(\theta;\phi)\|p(\theta)]$ becomes $D_\mathds{KL}[q(\theta;\phi_t)\|q(\theta;\phi_{t-1})]$. Once $\phi^{'}$ has been obtained, we can use it to compute the intrinsic reward.\\
+	To optimize Eq.~(\ref{eq:6}) efficiently, we only take a single second-order step. This way, the gradient is rescaled according to the curvature of the KL divergence at the origin. As such, we compute $D_{\mathds{KL}}[q(\theta;\phi+\lambda\Delta\phi)\|q(\theta;\phi)]$, with the update step $\Delta\phi$ defined as
+	\begin{equation}
+	\Delta{\phi} = H^{-1}(l)\nabla_\phi l(q(\theta;\phi),s_t),
+	\end{equation}
+	in which $H(l)$ is the Hessian of $l(q(\theta;\phi),s_t)$. Since we assume that the variational approximation is a fully factorized Gaussian, the KL divergence from posterior to prior has a particularly simple form 
+	\begin{equation}
+	D_{\mathds{KL}}[q(\theta;\phi)\|q(\theta;\phi')] = \frac{1}{2}\sum_{i=1}^{|\Theta|}\left(\left(\frac{\sigma_i}{\sigma_{i}^{'}}\right)^2+2\text{log}\sigma_i^{'}-2\text{log}\sigma_i+\frac{(\mu_u^{'}-\mu_i)}{\sigma_i^{'2}}\right)-\frac{|\Theta|}{2}.\label{eq:21}
+	\end{equation}
+	Because this KL divergence is approximately quadratic in tis parameters and the log-likelihood term can be seen as local linear compared to this highly curved KL term, we approximate $H$ by only calculate it for the term KL term $l_{\mathds{KL}}(q(\theta;\phi))$. This can be computed very efficiently in case of a fully factorized Gaussian distribution, as this approximation becomes a diagonal matrix. Looking at Eq.~(\ref{eq:21}), we can calculate the following Hessian at the origin. The $\mu$ and $\rho$ entries are defined as
+	\begin{equation}
+	\frac{\partial^2l_\mathds{KL}}{\partial\mu_i^2} = \frac{1}{log^2(1+e^{\rho_i})}\quad\quad\text{and}\quad\quad\frac{\partial^2l_\mathds{KL}}{\partial\rho_i^2} = \frac{2e^{2\rho_i}}{(1 + e^{\rho_i})^2}\frac{1}{\text{log}^2(1+e^{\rho_i})},
+	\end{equation}
+	while all other entries are zero. Furthermore, it is also possible to approximate the KL divergence through a second-order Taylor expansion as $\frac{1}{2}\Delta\phi H\Delta\phi=\frac{1}{2}(H^{-1}\nabla)^TH(H^(-1)\nabla)$, since both the value and gradient of the Kl divergence are zero at the origin. This gives us
+	\begin{equation}
+	D_\mathds{KL}[q(\theta;\phi + \lambda\Delta\phi)\|q(\theta;\phi)] \simeq \frac{1}{2}\lambda^2\nabla_\phi l^TH^{-1}(l_\mathds{KL})\nabla_\phi l
+	\end{equation}
+	Note that $H^{-1}(l_\mathds{KL})$ is diagonal, so this expression can be computed efficiently.
+	\section{conclusion}
+	To minimize Eq.(2), we use Monte Carlo method approximate this exact cost as Eq.(3). Vy using Eq.(10), we can get the optimization solution of Eq.(3).\\
+	The next problem is how to compute the KL divergence in the total reward function. We optimizing Eq.(11) to get the KL divergence. And the Newton's update step can be written as: $\Delta{\phi} = H^{-1}(l)\nabla_\phi l(q(\theta;\phi),s_t).$ {\color{red} If we use the softmax function for discrete random variables and logistic function for continuous random variables,} then the log-likelihood term in Eq.(11) can can be seen as locally linear compared to highly curved KL term of Gaussian. Thus, we use Eq.(15) to compute the KL divergence $	D_\mathds{KL}[q(\theta;\phi + \lambda\Delta\phi)\|q(\theta;\phi)]$.
+\end{document}
