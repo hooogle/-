@@ -1,0 +1,127 @@
+\documentclass{article}
+\title{Conditional Gaussian and Marginal Gaussian}
+\author{Xinghu Yao}
+\date{\today}
+
+\usepackage{geometry}
+\geometry{a4paper,scale=0.8}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+
+\begin{document}
+	\maketitle
+	\section{Question}
+    Given a joint Gaussian distribution $\mathcal{N}\left(\mathbf{x}|\boldsymbol{\mu},\mathbf{\Sigma}\right)$ with $\mathbf{\Lambda} \equiv \mathbf{\Sigma}^{-1}$ and
+    \begin{equation}
+        \mathbf{x} =\left( {\begin{array}{c}
+    \mathbf{x}_a\\
+    \mathbf{x}_b
+    \end{array}} \right),\quad
+    \boldsymbol{\mu} =\left( {\begin{array}{c}
+    \boldsymbol{\mu}_a\\
+    \boldsymbol{\mu}_b
+    \end{array}} \right)\label{eq:joint1}
+   \end{equation}
+   \begin{equation}
+    \mathbf{\Sigma} = \left(\begin{array}{cc}
+    \mathbf{\Sigma}_{aa} & \mathbf{\Sigma}_{ab}\\
+    \mathbf{\Sigma}_{ba} & \mathbf{\Sigma}_{bb}
+    \end{array}\right),\quad
+    \mathbf{\Lambda} =\left(\begin{array}{cc}
+    \mathbf{\Lambda}_{aa} & \mathbf{\Lambda}_{ab}\\
+    \mathbf{\Lambda}_{aa} & \mathbf{\Lambda}_{bb}
+    \end{array}\right)\label{eq:joint2}
+   \end{equation}
+   Try yo derive the following conditional distribution and marginal distribution:
+   \begin{align}
+   p\left(\mathbf{x}_a|\mathbf{x}_b\right) &=\mathcal{N}\left(\mathbf{x}|\boldsymbol{\mu}_{a|b},\mathbf{\Lambda}_{aa}^{-1}\right)\\
+   \boldsymbol{\mu}_{a|b} &= \boldsymbol{\mu}_a - \mathbf{\Lambda}_{aa}^{-1}\mathbf{\Lambda}_{ab}\mathbf{x}_b - \boldsymbol{\mu}_b.\\
+   p\left(\mathbf{x}_n\right) &= \mathcal{N}\left(\mathbf{x}_a|\boldsymbol{\mu}_a,\mathbf{\Sigma}_{aa}\right).
+   \end{align}
+   \section{Conditional Gaussian}
+   \par According to the definition of condition distribution, we have $p\left(\mathbf{x}_a|\mathbf{x}_b\right) = \frac{p\left(\mathbf{x}_a,\mathbf{x}_b\right)}{p\left(\mathbf{x}_b\right)}$. Thus, through fixing $\mathbf{x}_b$ to the observed value and normalizing the resulting expression with $p\left(\mathbf{x}_b\right)$, we can get the conditional distribution $p\left(\mathbf{x}_a|\mathbf{x}_b\right)$.
+	
+	We firstly consider the quadratic form in the exponent of the Gaussian distribution give by Eq.~(\ref{eq:joint1}) and Eq.~(\ref{eq:joint2}). In fact, we have
+   \begin{align}
+   &-\frac{1}{2}\left(\mathbf{x} - \boldsymbol{\mu}\right)^{T}\boldsymbol{\Sigma}^{-1}\left(\mathbf{x}- \boldsymbol{\mu}\right)\notag\\
+   &= -\frac{1}{2}\left(\begin{array}{c}
+   \mathbf{x}_a - \boldsymbol{\mu}_a\\
+   \mathbf{x}_b - \boldsymbol{\mu}_b
+   \end{array}\right)^T
+   \left(\begin{array}{cc}
+   \mathbf{\Lambda}_{aa} & \mathbf{\Lambda}_{ab}\notag\\
+   \mathbf{\Lambda}_{ba} & \mathbf{\Lambda}_{bb}\end{array}\right)
+   \left(\begin{array}{c}
+   \mathbf{x}_a - \boldsymbol{\mu}_a\\
+   \mathbf{x}_b - \boldsymbol{\mu}_b\\\end{array}\right)\notag\\
+   &= -\frac{1}{2}\left[\left(\mathbf{x}_a - \boldsymbol{\mu}_a\right)^T,\left(\mathbf{x}_b - \boldsymbol{\mu}_b\right)^T\right]
+   \left(\begin{array}{cc}
+   \mathbf{\Lambda}_{aa} & \mathbf{\Lambda}_{ab}\\
+   \mathbf{\Lambda}_{ba} & \mathbf{\Lambda}_{bb}\end{array}\right)
+   \left(\begin{array}{c}
+   \mathbf{x}_a - \boldsymbol{\mu}_a\\
+   \mathbf{x}_b - \boldsymbol{\mu}_b\\\end{array}\right)\notag\\
+   & = -\frac{1}{2}\left(\mathbf{x}_a - \boldsymbol{\mu}_a\right)^T\boldsymbol{\Lambda}_{aa}\left(\mathbf{x}_a -\boldsymbol{\mu}_a\right)-\frac{1}{2}\left(\mathbf{x}_a - \boldsymbol{\mu}_a\right)^T\boldsymbol{\Lambda}_{ab}\left(\mathbf{x}_b -\boldsymbol{\mu}_b\right)\notag\\&-\frac{1}{2}\left(\mathbf{x}_b - \boldsymbol{\mu}_b\right)^T\boldsymbol{\Lambda}_{ba}\left(\mathbf{x}_a -\boldsymbol{\mu}_a\right)
+   -\frac{1}{2}\left(\mathbf{x}_b - \boldsymbol{\mu}_b\right)^T\boldsymbol{\Lambda}_{bb}\left(\mathbf{x}_b -\boldsymbol{\mu}_b\right).\label{eq:joint3}
+   \end{align}
+   \par We see that as a function of $\mathbf{x}_a$, this is a quadratic form, thus the conditional distribution $p\left(\mathbf{x}_a|\mathbf{x}_b\right)$ is a Gaussian distribution. Noticing that the exponent of a general Gaussian distribution $\mathcal{N}\left(\mathbf{x}|\boldsymbol{\mu},\mathbf{\Sigma}\right)$ can be written
+   \begin{equation}
+   -\frac{1}{2}\left(\mathbf{x} - \boldsymbol{\mu}\right)^{T}\boldsymbol{\Sigma}^{-1}\left(\mathbf{x}- \boldsymbol{\mu}\right) = -\frac{1}{2}\mathbf{x}^T\boldsymbol{\Sigma}^{-1}\mathbf{x} + \mathbf{x}^T\boldsymbol{\Sigma}^{-1}\boldsymbol{\mu}+const\label{eq:joint4}
+   \end{equation} 
+   where 'const' denotes terms which are independent of $\mathbf{x}$. Consider the functional dependence of Eq.~(\ref{eq:joint3}) on $\mathbf{x}_b$ in which $\mathbf{x}_a$ is regarded as a constant. The second order of $\mathbf{x}_a$ can be written
+   \begin{equation}
+   -\frac{1}{2}\mathbf{x}_a^T\Lambda_{aa}\mathbf{x}_{a}\label{eq:joint5}
+   \end{equation}
+   Comparing Eq.~(\ref{eq:joint4}) and Eq.~(\ref{eq:joint5}), we can immediately get the covariance matrix of $p\left(\mathbf{x}_a|\mathbf{x}_b\right)$ is given by
+   \begin{equation}
+   \mathbf{\Sigma}_{a|b}=\Lambda_{aa}^{-1}\label{eq:joint6}.
+   \end{equation} 
+   Now consider the linear form of $\mathbf{x}_a$ in Eq.~(\ref{eq:joint3})
+   \begin{equation}
+   \mathbf{x}_a^T\left\{\boldsymbol{\Lambda}_{aa}\boldsymbol{\mu}_a - \boldsymbol{\Lambda}_{ab}\left(\mathbf{x}_b - \boldsymbol{\mu}_b\right)\right\}\label{eq:joint7}
+   \end{equation}
+   Comparing Eq.~(\ref{eq:joint4}) Eq.~(\ref{eq:joint7}), we can get $\boldsymbol{\Sigma}^{-1}\boldsymbol{\mu}=\mathbf{x}_a^T\left\{\boldsymbol{\Lambda}_{aa}\boldsymbol{\mu}_a - \boldsymbol{\Lambda}_{ab}\left(\mathbf{x}_b - \boldsymbol{\mu}_b\right)\right\}$. Thus, we have 
+   \begin{align}
+   \boldsymbol{\mu}_{a|b} &= \boldsymbol{\Sigma}_{a|b}\left\{\boldsymbol{\Lambda}_{aa}\boldsymbol{\mu}_a - \boldsymbol{\Lambda}_{ab}\left(\mathbf{x}_b - \boldsymbol{\mu}_b\right)\right\}\notag\\
+   &= \boldsymbol{\mu}_a - \boldsymbol{\Lambda}_{ab}^{-1}\boldsymbol{\Lambda}_{ab}\left(\mathbf{x}_b - \boldsymbol{\mu}_b\right)\label{eq:joint8}
+   \end{align}
+   Combing Eq.~(\ref{eq:joint6}) and Eq.~(\ref{eq:joint8}), we can get $p\left(\mathbf{x}_a|\mathbf{x}_b\right) =\mathcal{N}\left(\mathbf{x}|\boldsymbol{\mu}_{a|b},\mathbf{\Lambda}_{aa}^{-1}\right)$ where $\boldsymbol{\mu}_{a|b} = \boldsymbol{\mu}_a - \mathbf{\Lambda}_{aa}^{-1}\mathbf{\Lambda}_{ab}\mathbf{x}_b - \boldsymbol{\mu}_b.$
+   \section{Marginal Gaussian}
+   In fact, the Marginal Gaussian distribution can be written as
+   \begin{equation}
+   p\left(\mathbf{x}_a\right) = \int p\left(\mathbf{x}_a,\mathbf{x}_{b}\right)d\mathbf{x}_b\label{eq:joint12}
+   \end{equation}
+   Picking out those terms only involve $\mathbf{x}_b$ in the joint distribution $p\left(\mathbf{x}_a,\mathbf{x}_b\right)$, we have
+   \begin{equation}
+   -\frac{1}{2}\mathbf{x}_b^T\boldsymbol{\Lambda}_{bb}\mathbf{x}_b+\mathbf{x}_b^T\mathbf{m}=-\frac{1}{2}\left(\mathbf{x}_b-\boldsymbol{\Lambda}_{bb}^{-1}\mathbf{m}\right)^T\boldsymbol{\Lambda}_{bb}\left(\mathbf{x}_b-\boldsymbol{\Lambda}_{bb}^{-1}\mathbf{m}\right)+\frac{1}{2}\mathbf{m}^T\boldsymbol{\Lambda}_{bb}^{-1}\mathbf{m}\label{eq:joint13}
+   \end{equation}
+   where $\mathbf{m} = \boldsymbol{\Lambda}_{bb}\boldsymbol{\mu}_b - \boldsymbol{\Lambda}_{ba}\left(\mathbf{x}_a - \boldsymbol{\mu}_a\right)$ 
+   Now we turn to consider the general Gaussian distribution, which is 
+   \begin{equation}
+   \mathcal{N}\left(\mathbf{x}|\boldsymbol{\mu},\boldsymbol{\Sigma}\right) = 
+   \frac{1}{\left(2\pi\right)^{D/2}}\frac{1}{\left|\boldsymbol{\Sigma}\right|^{1/2}}\text{exp}\left\{-\frac{1}{2}\left(\mathbf{x}-\boldsymbol{\mu}\right)^T\boldsymbol{\Sigma}^{-1}\left(\mathbf{x}-\boldsymbol{\mu}\right)\right\} \label{eq:joint14}
+   \end{equation}
+   From Eq.~(\ref{eq:joint14}) we can see the coefficient of Gaussian distribution is independent of the mean and only governed by the determinant of the covariance matrix. Back to Eq.~{\ref{eq:joint13}, we can see the integration over $\mathbf{x}$ is as follows
+   \begin{equation}
+   \int\text{exp}\left\{-\frac{1}{2}\left(\mathbf{x}_b-\boldsymbol{\Lambda}_{bb}^{-1}\mathbf{m}\right)^T\boldsymbol{\Lambda}_{bb}\left(\mathbf{x}_b-\boldsymbol{\Lambda}_{bb}^{-1}\mathbf{m}\right)\right\}\text{d}\mathbf{x}_b\label{eq:15}.
+   \end{equation}
+   This integration is irrelevant with the mean so we can margin out $mathbf{x}_b$ after the integration.Combing the $\mathbf{x}_b^{T}\mathbf{m}$ in Eq.~(\ref{eq:joint13}) with the remaining terms from Eq.~(\ref{eq:joint3}), we have
+   \begin{align}
+   &\frac{1}{2}\left[\boldsymbol{\Lambda}_{bb}\boldsymbol{\mu}_b - \boldsymbol{\Lambda}_{ba}\left(\mathbf{x}_a - \boldsymbol{\mu}_a\right)\right]^T\boldsymbol{\Lambda}_{bb}^{-1}\left[\boldsymbol{\Lambda}_{bb}\boldsymbol{\mu}_b - \boldsymbol{\Lambda}_{ba}\left(\mathbf{x}_a - \boldsymbol{\mu}_a\right)\right]-\frac{1}{2}\mathbf{x}_a^T\boldsymbol{\Lambda}_{aa}\mathbf{x}_a+\mathbf{x}_a^T\left(\boldsymbol{\Lambda}_{aa}\boldsymbol{\mu}_a+\boldsymbol{\Lambda}_{ab}\boldsymbol{\mu}_b\right)+\text{const}\notag\\
+   &=\frac{1}{2}\mathbf{x}_a^T\left(\boldsymbol{\Lambda}_{aa}-\boldsymbol{\Lambda}_{ab}\boldsymbol{\Lambda}_{bb}^{-1}\boldsymbol{\Lambda}_{ba}\right)\mathbf{x}_a+\mathbf{x}_a^T\left(\boldsymbol{\Lambda}_{aa}-\boldsymbol{\Lambda}_{ab}\boldsymbol{\Lambda}_{bb}^{-1}\right)^{-1}\boldsymbol{\mu}_a + \text{const}\label{eq:joint16}
+   \end{align}
+   where 'const' denotes quantities independent of $\mathbf{x}_a$. Comparing Eq.~(\ref{eq:joint16}) with Eq.~(\ref{eq:joint4}), we can get the covariance of $p\left(\mathbf{x}_a\right)$ is
+   \begin{equation}
+   \boldsymbol{\Sigma}_a = \left(\boldsymbol{\Lambda}_{aa}-\boldsymbol{\Lambda}_{ab}\boldsymbol{\Lambda}_{bb}^{-1}\boldsymbol{\Lambda}_{ba}\right)^{-1} = \boldsymbol{\Sigma}_{aa}\label{eq:joint17}
+   \end{equation} 
+   and the mean of $p\left(\mathbf{x}_a\right)$ is given by
+   \begin{equation}
+   \boldsymbol{\mu}_{a}=\boldsymbol{\Sigma}_{a}\left(\boldsymbol{\Lambda}_{aa}-\boldsymbol{\Lambda}_{ab}\boldsymbol{\Lambda}_{bb}^{-1}\boldsymbol{\Lambda}_{ba}\right)\boldsymbol{\mu}_{a}\label{eq:joint18}
+   \end{equation}
+   We can summarized Eq.~(\ref{eq:joint17}) and Eq.~(\ref{eq:joint18}) as
+   \begin{equation}
+   p\left(\mathbf{x}_a\right) = \mathcal{N}\left(\mathbf{x}_a|\boldsymbol{\mu}_a,\boldsymbol{\Sigma}_{aa}\right)
+   \end{equation}
+\end{document}

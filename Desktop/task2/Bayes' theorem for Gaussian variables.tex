@@ -1,0 +1,100 @@
+\documentclass{article}
+\title{Bayes' theorem for Gaussian variables}
+\author{Xinghu Yao}
+\date{\today}
+
+\usepackage{geometry}
+\geometry{a4paper,scale=0.8}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{dsfont}
+
+
+\begin{document}
+	\maketitle
+	\section{Question}
+    Given a marginal Gaussian distribution for $\mathbf{x}$ and a conditional Gaussian distribution for $\mathbf{y}$ given $\mathbf{x}$ in the form
+    \begin{align}
+    p\left(\mathbf{x}\right) &= \mathcal{N}\left(\mathbf{x}|\boldsymbol{\mu},\boldsymbol{\Lambda}^{-1}\right)\\
+    p\left(\mathbf{y}|\mathbf{x}\right)&=\mathcal{N}\left(\mathbf{y}|\mathbf{Ax}+\mathbf{b},\mathbf{L}^{-1}\right)
+    \end{align}
+    the marginal distribution of $\mathbf{y}$ and the conditional distribution of $\mathbf{x}$ given $\mathbf{y}$ are given by
+    \begin{align}
+    p\left(\mathbf{y}\right)&=\mathcal{N}\left(\mathbf{y}|\mathbf{A}\boldsymbol{\mu}+\mathbf{b},\mathbf{A}\boldsymbol{\Lambda}^{-1}\mathbf{A}^T\right)\\
+    p\left(\mathbf{x}|\mathbf{y}\right)&=\mathcal{N}\left(\mathbf{x}|\boldsymbol{\Sigma}\left\{\mathbf{A}^T\mathbf{L}\mathbf{y-b}+\boldsymbol{\Lambda\mu}\right\},\boldsymbol{\Sigma}\right)
+    \end{align}
+    where
+    \begin{equation}
+    \boldsymbol{\Sigma} = \left(\boldsymbol{\Lambda}+\mathbf{A}^T\mathbf{LA}\right)^{-1}
+    \end{equation}
+    \section{Solution}
+    First, it is easy (just follow the definition of matrix multiplication) to prove the following equation for the inverse of a partitioned matrix
+    \begin{equation}
+    \left(\begin{array}{cc}
+    \mathbf{A} & \mathbf{B}\\
+    \mathbf{C} & \mathbf{D}
+    \end{array}\right) =\left(\begin{array}{cc}
+    \mathbf{M} & \mathbf{-MBD}^{-1}\\
+    \mathbf{-D^{-1}CM} & \mathbf{D^{-1}+D^{-1}CMBN^{-1}}\end{array}\right)\label{eq:6}
+    \end{equation} 
+    where we have defined $\mathbf{M=(A-BD^{-1}C)^{-1}}$.\\
+    We define $\mathbf{z=(x,y)}^T$ as the joint distribution over $\mathbf{x}$ and $\mathbf{y}$ and consider the log of $\mathbf{z}$
+    \begin{align}
+    \text{ln}p(\mathbf{z})&=\text{ln}p(\mathbf{x})+\text{ln}p(\mathbf{y|x})\notag\\
+    &=-\frac{1}{2}(\boldsymbol{x-\mu}^T)\boldsymbol{\Lambda}(\boldsymbol{x-\mu})-\frac{1}{2}(\mathbf{y-Ax-b})^{-1}\mathbf{L}(\mathbf{y-Ax-b})+\text{const}\label{eq:7}
+    \end{align}
+    The second order terms in Eq.~{\ref{eq:7}} can be written as
+    \begin{align}
+    &-\frac{1}{2}\boldsymbol{x^T(\Lambda+A^TLA)x} - \frac{1}{2}\mathbf{y^TLy}+\frac{1}{2}\mathbf{y^TLAx}+\frac{1}{2}\mathbf{x^TA^TLy}\notag\\
+    &= -\frac{1}{2}\left(\begin{array}{c}
+    \mathbf{x}\\
+    \mathbf{y}\end{array}\right)^T\left(\begin{array}{cc}
+    \boldsymbol{\Lambda}+\mathbf{A^TLA} & -\mathbf{A^TL}\\
+    -\mathbf{LA} & \mathbf{L}\end{array}\right)\left(\begin{array}{c}
+    \mathbf{x}\\
+    \mathbf{y}\end{array}\right)\notag\\
+    & = -\frac{1}{2}\mathbf{z}^T\mathbf{Rz}
+    \end{align}
+    The linear terms in Eq.~{\ref{eq:7}} can be written as
+    \begin{equation}
+    \mathbf{x}^T\boldsymbol{\Lambda\mu}-\mathbf{x}^T\mathbf{A}^T\mathbf{Lb}+\mathbf{y}^T\mathbf{Lb}=\left(\begin{array}{c}
+    \mathbf{x}\\
+    \mathbf{y}\end{array}\right)^T\left(\begin{array}{c}
+    \mathbf{A}\boldsymbol{\mu}-\mathbf{A}^T\mathbf{Lb}\\
+    \mathbf{Lb}\end{array}\right).
+    \end{equation}
+    Thus, the inverse matrix of covariance matrix can be written as
+    \begin{equation}
+    \mathbf{R} = \left(\begin{array}{cc}
+    \boldsymbol{\Lambda}+\mathbf{A^TLA} & -\mathbf{A^TL}\\
+    -\mathbf{LA} & \mathbf{L}\end{array}\right)
+    \end{equation}
+    And using the Eq.~{\ref{eq:6}}, we have
+    \begin{equation}
+    \text{cov}[\mathbf{z}]=\mathbf{R}^{-1}=\left(\begin{array}{cc}
+    \boldsymbol{\Lambda}^{-1} & \boldsymbol{\Lambda}^{-1}\mathbf{A}^{T}\\
+    \mathbf{A}\boldsymbol{\Lambda}^{-1} & \mathbf{L}^{-1}+\mathbf{A}\boldsymbol{\Lambda}^{-1}\mathbf{A}^{T}\end{array}\right).\label{eq:11}
+    \end{equation}
+    Similar to the former report, we have
+    \begin{equation}
+	\mathds{E}[\mathbf{z}] = \mathbf{R}^{-1}\left(\begin{array}{c}
+	\mathbf{A}\boldsymbol{\mu}-\mathbf{A}^T\mathbf{Lb}\\
+	\mathbf{Lb}\end{array}\right) = \left(\begin{array}{c}
+	\boldsymbol{\mu}\\
+	\mathbf{A}\boldsymbol{\mu}+\mathbf{b}\end{array}\right).\label{eq:12}
+    \end{equation}
+    Making use of Eq.~{\ref{eq:11}} and Eq.~{\ref{eq:12}}, we can get the mean and covariance of the marginal distribution $p(\mathbf{y})$, which is
+    \begin{align}
+   	\mathds{E}[\mathbf{y}] &= \mathbf{A}\boldsymbol{\mu}+\mathbf{b}\\
+   	\text{cov}[\mathbf{y}] &= \mathbf{L}^{-1} + \mathbf{A}\boldsymbol{\Lambda}^{-1}\mathbf{A}^{T}. 
+    \end{align}
+    This means $p(\mathbf{y}) = \mathcal{N}(\mathbf{y}|\mathbf{A}\boldsymbol{\mu}+\mathbf{b},\mathbf{L}^{-1}+\mathbf{A}\boldsymbol{\Lambda}^{-1}\mathbf{A}^T)$. By using the last reports results, we have 
+    \begin{align}
+    \mathds{E}[\mathbf{x|y}] &= (\boldsymbol{\Lambda}+\mathbf{A^TLA}^{-1})\left\{\mathbf{A}^T\mathbf{L(y-b)}+\boldsymbol{\Lambda\mu}\right\}\\
+    \text{cov}[\mathbf{x|y}] &= \boldsymbol{\Lambda}+\mathbf{A^TLA}^{-1}. 
+    \end{align}
+    This means $p(\mathbf{x|y}) = \mathcal{N}\left(\mathbf{x}|\left(\boldsymbol{\Lambda}+\mathbf{A^TLA}\right)^{-1}\left\{\mathbf{A}^T\mathbf{L(y-b)}+\boldsymbol{\Lambda\mu}\right\},\left(\boldsymbol{\Lambda}+\mathbf{A^TLA}\right)^{-1}\right)$.
+    
+      
+\end{document}

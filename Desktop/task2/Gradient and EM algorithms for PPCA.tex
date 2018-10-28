@@ -1,0 +1,110 @@
+\documentclass{article}
+\title{Gradient and EM algorithms for PPCA}
+\author{Xinghu Yao}
+\date{\today}
+
+\usepackage{geometry}
+\geometry{a4paper,scale=0.8}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{dsfont}
+
+
+\begin{document}
+	\maketitle
+	\section{Gradient method for PPCA}
+    The log likelihood function of PPCA can be written as 
+    \begin{align}
+    \text{ln}p&\left(\mathbf{X}|\boldsymbol{\mu},\boldsymbol{W},\sigma^2\right) = \sum\limits_{n=1}^{N}\text{ln}p\left(\mathbf{x}_n|\mathbf{W},\boldsymbol{\mu},\sigma^2\right)\notag\\
+    &=-\frac{ND}{2}\text{ln}\left(2\pi\right)-\frac{N}{2}\text{ln}|\mathbf{C}|-\frac{1}{2}\sum\limits_{n=1}^{N}\left(\mathbf{x}_n-\boldsymbol{\mu}\right)^T\mathbf{C}^{-1}\left(\mathbf{x}_n-\boldsymbol{\mu}\right).   
+    \end{align}
+    where the $D \times D$ covariance matrix $C$ is defined by
+    \begin{equation}
+    \mathbf{C} = \mathbf{WW}^T+\sigma^2\mathbf{L}.
+    \end{equation}
+    Setting the derivation w.r.t. $\boldsymbol{\mu}$ equal to zero gives:
+    \begin{equation}
+    \boldsymbol{\mu} = -\frac{1}{N}\sum\limits_{n=1}^{N}\mathbf{x}_n=\bar{\mathbf{x}}.
+    \end{equation}
+    The log-likelihood is then simplified as:
+    \begin{equation}
+    \text{ln}p\left(\mathbf{X}|\boldsymbol{\mu},\textbf{W},\sigma^2\right)= -\frac{ND}{2}\text{ln}\left(2\pi\right)-\frac{N}{2}\text{ln}|\textbf{C}|-\frac{1}{2}\sum\limits^{N}_{n=1}\left(\mathbf{x}_n-\bar{\mathbf{x}}\right)^T\mathbf{C}^{-1}\left(\mathbf{x}_n-\bar{\mathbf{x}}\right)
+    \end{equation}
+    or can be written as:
+    \begin{equation}
+	\mathbf{L} \triangleq \text{ln}p\left(\mathbf{X}|\boldsymbol{\mu},\textbf{W},\sigma^2\right)= -\frac{N}{2}\left\{D\text{ln}\left(2\pi\right)+\text{ln}|\textbf{C}|+\text{Tr}\left(\mathbf{C}^{-1}\mathbf{S}\right)\right\}
+	\end{equation}
+	where $S$ is the data covariance matrix defined by
+	\begin{equation}
+	\mathbf{S} = \frac{1}{N}\sum\limits_{n=1}^{N}\left(\mathbf{x}_n-\bar{\mathbf{x}}\right)\left(\mathbf{x}_n-\bar{\mathbf{x}}\right)^T
+	\end{equation}
+	The gradient of the log-likelihood with respect to $\mathbf{W}$ may be obtained from standard matrix differentiation results:
+	\begin{equation}
+	\frac{\partial{\mathbf{L}}}{\partial{\mathbf{W}}} = N\left(\mathbf{C}^{-1}\mathbf{S}\mathbf{C}^{-1}\mathbf{W}-\mathbf{C}^{-1}\mathbf{W}\right).
+	\end{equation}
+	At the stationary points:
+	\begin{equation}
+	\mathbf{S}\mathbf{C}^{-1}\mathbf{W}=\mathbf{W}
+	\end{equation}
+	By using SVD method and some interesting tricks, we can solve this problem and all solutions of $\mathbf{W}$ can be written as
+	\begin{equation}
+	\mathbf{W}_{ML}=\mathbf{U}_M\left(\mathbf{L}_M-\sigma^2\mathbf{I}\right)^{1/2}\mathbf{R}
+	\end{equation}
+	where $\mathbf{U}_M$ is a $D \times M$ matrix whose columns are given by any subset of the eigenvectors of the data covariance matrix $\mathbf{S}$, the $M \times M$ diagonal matrix $\mathbf{L}_M$ has elements given by the corresponding eigenvalues $\lambda_i$, and $\mathbf{R}$ is an arbitrary $M \times M$ orthogonal matrix. 
+	In fact, when the $M$ largest eigenvalues are chosen, the maximum of the likelihood function is obtained. In this case, the columns of $\mathbf{W}$ define the principle subspace of standard PCA and the corresponding maximum likelihood solution for $\sigma^2$ is then given by
+	\begin{equation}
+	\sigma^2_{ML}=\frac{1}{D-M}\sum\limits^{D}_{i=M+1}\lambda_i
+	\end{equation}
+	which is the average of the discarded eigenvalues. 
+	\section{EM algorithms for PPCA}
+	We first take the expectation of the complete-data log-likelihood w.r.t. the posterior distribution of the latent distribution evaluated using 'old' parameter values. Maximization of this expected complete data log-likelihood then yields the 'new' parameter values. The complete-data log-likelihood function takes the form
+	\begin{equation}
+	\text{ln}p\left(\mathbf{X},\mathbf{Z}|\boldsymbol{\mu},\boldsymbol{W},\sigma^2\right)=\sum\limits_{n=1}^{N}
+	\left\{\text{ln}p\left(\mathbf{x}_n|\mathbf{z}_n\right)+\text{ln}p\left(\mathbf{z}_n\right)\right\}	
+	\end{equation}
+	where the $n^{\text{th}}$ row of the matrix $\mathbf{Z}$ is given by $\mathbf{z}_n$. Recall that $p(\mathbf{z}) = \mathcal{N}(\mathbf{z}|\mathbf{0,I}),p(\mathbf{x|z}=\mathcal{N}(\mathbf{x}|\mathbf{Wz}+\boldsymbol{\mu},\sigma^2\mathbf{I})$. Thus, the expectation w.r.t. the posterior distribution over the latent variables can be written as
+	\begin{equation}
+	\mathds{E}\left[\text{ln}p\left(\mathbf{X},\mathbf{Z}|\boldsymbol{\mu},\mathbf{W},\sigma^2\right)\right] =
+	 -\sum\limits_{n=1}^{N}
+	\left\{\begin{array}{c}
+	\frac{D}{2}\text{ln}\left(2\pi\sigma^2\right)+\frac{1}{2}Tr\left(\mathds{E}\left[\mathbf{z}_n\mathbf{z}_n^T\right]\right)\\
+	+\frac{1}{2\sigma^2}\|\mathbf{x}_n-\boldsymbol{\mu}\|^2-\frac{1}{\sigma^2}\mathds{E}\left[\mathbf{z}_n\right]^T\mathbf{W}^T\left(\mathbf{x}_n-\boldsymbol{\mu}\right)\\
+	+\frac{1}{2\sigma^2}Tr\left(\mathds{E}\left[\mathbf{z}_n\mathbf{z}_n^T\right]\mathbf{W}^T\mathbf{W}\right)+\frac{M}{2\text{ln}\left(2\pi\right)}
+	\end{array}\right\}\label{eq:12}
+	\end{equation}  
+	{\bfseries E-Step}: We use the old parameter to evaculate
+	\begin{align}
+	&\mathds{E}[\mathbf{z}_n] = \mathbf{M}^{-1}\mathbf{W}^T(\mathbf{x}_n-\bar{\mathbf{x}})\\
+	&\mathds{E}[\mathbf{z}_n\mathbf{z}_n^T] = \sigma^2\mathbf{M}^{-1} + \mathds[\mathbf{z}_n]\mathds[\mathbf{z}_n]^T
+	\end{align}
+	This follows directly from
+	\begin{equation}
+	p(\mathbf{z|x}) = \mathbf{\mathcal{N}}\left(\mathbf{z}|\mathbf{M}^{-1}\mathbf{W}^T\left(\mathbf{x}-\boldsymbol{\mu}\right),\sigma^2\mathbf{M}^{-1}\right),\mathbf{M} = \mathbf{W}^T\mathbf{W}+\sigma^2\mathbf{I}\label{eq:15}
+	\end{equation}
+	together with the standard result
+	\begin{equation}
+	\mathds{E}[\mathbf{z}_n\mathbf{z}_n^T] = \text{cov}[\mathbf{z}]+	\mathds{E}[\mathbf{z}_n]\mathds{E}[\mathbf{z}_n]^T\label{eq:16}
+	\end{equation}
+	Substituting Eq.~(\ref{eq:15}) and Eq.~(\ref{eq:16}) into Eq.~(\ref{eq:12}), we can compute the expectation result.\\
+	{\bfseries M-Step}: We can get the two M-equations by setting the derivatives w.r.t $\mathbf{W}$ and $\sigma^2$ to zero, which is
+	\begin{equation}
+	\frac{\partial\mathds{E}\left[\text{ln}p\left(\mathbf{X,Z}|\boldsymbol{\mu},\mathbf{W},\sigma^2\right)\right]}{\partial\mathbf{W}} = \sum\limits_{n=1}^{N}\left\{\frac{1}{\sigma^2}\left(\mathbf{x}_n-\boldsymbol{\mu}\right)\mathds{E}\left[\mathbf{z}_n\right]^T-\frac{1}{\sigma^2}\mathbf{W}\mathds{E}\left[\mathbf{z}_n\mathbf{z}_n^T\right]\right\}=0
+	\end{equation} 
+    \begin{align}
+	\frac{\partial\mathds{E}\left[\text{ln}p\left(\mathbf{X,Z}|\boldsymbol{\mu},\mathbf{W},\sigma^2\right)\right]}{\partial\sigma^2} = \sum\limits_{n=1}^{N}&\left\{-\frac{D}{2\sigma^2}-\frac{1}{\sigma^4}\mathds{E}\left[\mathbf{z}_n\right]^T\mathbf{W}^T\left(\mathbf{x}_n-\boldsymbol{\mu}\right)+\notag\right.\\
+	&\phantom{=\;\;}\left.\frac{1}{2\sigma^4}\|\mathbf{x}_n-\boldsymbol{\mu}\|^2+\frac{1}{2\sigma^4}\text{Tr}\left(\mathds{E}\left[\mathbf{z}_n\mathbf{z}_n^T\right]\mathbf{W}^T\mathbf{W}\right)\right\}=0
+	\end{align}
+	It is worth to say that we used $\frac{\partial}{\partial\mathbf{A}}\text{Tr}(\mathbf{ABA}^T)=\mathbf{A(B+B^T)}$ , $\frac{\partial}{\partial\mathbf{A}}\text{Tr}(\mathbf{AB})= \mathbf{B}^T$. So, it is clear that we can get the following equations
+	\begin{equation}
+	\mathbf{W}_{\text{new}}=\left[\sum\limits_{n=1}^{N}\left(\mathbf{x}_n-\bar{\mathbf{x}}\right)\mathds{E}\left[\mathbf{z}_n\right]^T\right]\left[\sum\limits_{n=1}^{N}\mathds{E}\left[\mathbf{z}_n\mathbf{z}_n^T\right]\right]^{-1}
+	\end{equation}
+	\begin{align}
+	\sigma^2_{\text{new}} = \frac{1}{ND}\sum\limits_{n=1}^{N}\left\{\|\mathbf{x}_n-\bar{\mathbf{x}}\|^2-2\mathds{E}\left[\mathbf{z}_n\right]^T\mathbf{W}_{new}^T\left(\mathbf{x}_n-\bar{\mathbf{x}}\right)+\text{Tr}\left(\mathds{E}\left[\mathbf{z}_n\mathbf{z}_n^T\right]\mathbf{W}_{new}^{T}\mathbf{W}_{new}\right)\right\}.
+	\end{align}
+	  
+
+	
+	
+		
+\end{document}

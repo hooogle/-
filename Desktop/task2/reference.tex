@@ -1,0 +1,92 @@
+\documentclass{article}
+\title{The Derivation of Probabilistic PCA}
+\author{YaoXinghu}
+\date{\today}
+
+\usepackage{geometry}
+\geometry{a4paper,scale=0.8}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\begin{document}
+	\maketitle
+	\section{previous derivation}
+	Given the dataset $D=\{\mathbf{x_i}\}_{i=1}^N, \mathbf x_i \in \mathbb R^d $, we introduce a explicit latent variable $\mathbf{z}$ corresponding to a subspace with a smaller dimensionality and the prior distribution over $\mathbf z$ is defined as a Gaussian distribution $p\left(\mathbf z \right)$:
+	\begin{equation}
+		 p\left(\mathbf z \right) = \mathcal N \left(\mathbf z|\mathbf 0, \mathbf I \right)\label{eq:prior}
+	\end{equation}
+     Here we define a mapping from latent space to data space $\mathbf z \rightarrow \mathbf x$:
+     \begin{equation}
+     	\mathbf x = \mathbf W \mathbf z + \boldsymbol \mu + \boldsymbol \epsilon
+     \end{equation}
+     where the noise Gaussian variable $\boldsymbol \epsilon$ is given by zero-mean and convariance $ \sigma^2 \mathbf I$, so the conditional distribution $p\left(\mathbf x|\mathbf z \right)$ is again Gaussian:
+     \begin{equation}
+     	p\left(\mathbf x|\mathbf z \right) = \mathcal N \left(\mathbf x|\mathbf W \mathbf z + \boldsymbol \mu, \sigma^2 \mathbf I \right)\label{eq:conditional}
+     \end{equation}
+	\section{maximum likelihood}
+	To determine the parameters of the generative model, $ \theta = \{ \mathbf W, \boldsymbol \mu, \sigma^2 \}$, we utilize the maximum likelihood:
+	\begin{equation}
+		L\left(\theta\right) = \mbox{log}\; p\left(\mathbf x| \theta \right)
+	\end{equation}
+	And the marginal distribution can be rewritten as:
+	\begin{align}
+       \mbox{log}\; p\left(\mathbf x| \theta \right) &= \mbox{log}\; \int_{\mathbf z}^{} p\left(\mathbf x, \mathbf z| \theta \right)\notag\\
+       & = \mbox{log}\; \int_{\mathbf z}^{} p\left(\mathbf x|\mathbf z, \theta \right)p\left(\mathbf z \right)\label{eq:marginal}
+	\end{align}
+	According to the Eq.~(\ref{eq:prior}) and Eq.~(\ref{eq:conditional}), the joint distribution $p\left(\mathbf x, \mathbf z| \theta \right)$ can be written as:
+	\begin{small}
+	\begin{align}
+		& p\left(\mathbf x, \mathbf z| \theta \right) = p\left(\mathbf x|\mathbf z, \theta \right)p\left(\mathbf z \right)\notag\\
+		&\propto \mbox{exp}\left(-\frac{\left(\mathbf x-\mathbf W \mathbf z - \boldsymbol{\mu}\right)^{\top}\left(\mathbf x-\mathbf W \mathbf z - \boldsymbol{\mu}\right)}{2\sigma^2}\right)\mbox{exp}\left(-\frac{\mathbf z^\top \mathbf z}{2}\right)\notag\\
+		&\propto \mbox{exp}\left(-\frac{\mathbf x^\top \mathbf x - \mathbf x^\top \mathbf W \mathbf z - \mathbf x^\top \boldsymbol \mu - \mathbf z^\top \mathbf W^\top \mathbf x + \mathbf z^\top \mathbf W^\top \mathbf W \mathbf z + \mathbf z^\top \mathbf W^\top \boldsymbol \mu - \boldsymbol \mu^\top \mathbf x + \boldsymbol \mu^\top \mathbf W \mathbf z + \boldsymbol \mu^\top \boldsymbol \mu}{2\sigma^2}-\frac{\mathbf z^\top \mathbf z}{2}\right)\notag\\
+		& \propto \mbox{exp} \left( -\frac{1}{2}\left( \left(\mathbf x^\top - \boldsymbol \mu^\top\right)\left(\frac{\mathbf I}{\sigma^2}\right)\mathbf x - \left(\mathbf x^\top - \boldsymbol \mu^\top \right)\left(\frac{\mathbf I}{\sigma^2}\right)\boldsymbol \mu -\left(\mathbf x^\top - \boldsymbol \mu^\top \right)\left(\frac{\mathbf W}{\sigma^2}\right)\mathbf z -\mathbf z^\top \left(\frac{\mathbf W^\top}{\sigma^2}\right)\left(\mathbf x - \boldsymbol \mu\right)+\mathbf z^\top\left(\frac{\mathbf W^\top\mathbf W}{\sigma^2} + \mathbf I\right)\mathbf z\right) \right)	\notag	\\
+		& \propto \mbox{exp} \left( -\frac{1}{2}\left( \left(\mathbf x^\top - \boldsymbol \mu^\top\right)\left(\frac{\mathbf I}{\sigma^2}\right)\left(\mathbf x - \boldsymbol \mu \right) -\left(\mathbf x^\top - \boldsymbol \mu^\top \right)\left(\frac{\mathbf W}{\sigma^2}\right)\mathbf z -\mathbf z^\top \left(\frac{\mathbf W^\top}{\sigma^2}\right)\left(\mathbf x - \boldsymbol \mu\right)+\mathbf z^\top\left(\frac{\mathbf W^\top\mathbf W}{\sigma^2} + \mathbf I\right)\mathbf z\right) \right)	\notag\\
+		& \propto \mbox{exp} \left(-\frac{1}{2}\left(\left[\mathbf z^\top \;
+		\left(\mathbf x - \boldsymbol \mu\right)^\top\right]\begin{bmatrix}
+		\frac{\mathbf W^\top\mathbf W}{\sigma^2} + \mathbf I     & -\frac{\mathbf W^\top}{\sigma^2}      \\
+		-\frac{\mathbf W}{\sigma^2}  & \frac{\mathbf I}{\sigma^2}
+		\end{bmatrix}\begin{bmatrix}
+		\mathbf z\\
+		\mathbf x - \boldsymbol \mu
+		\end{bmatrix}\right)\right)	\label{eq:joint_dist}
+	\end{align}
+	\end{small}
+From the Eq.~(\ref{eq:joint_dist}), we can see that the joint distribution  actually is a Gaussian over the joint variable $\left[\mathbf z;\mathbf x\right]$:
+\begin{equation}
+    p\left(\mathbf x, \mathbf z| \theta \right) = \mathcal N \left(\begin{bmatrix}
+    \mathbf z\\
+    \mathbf x
+    \end{bmatrix}|\begin{bmatrix}
+    \mathbf 0 \\
+    \boldsymbol \mu
+    \end{bmatrix}, \boldsymbol \Sigma_{\mathbf z, \mathbf x}\right)
+\end{equation}
+
+where
+\begin{equation}
+	\boldsymbol \Sigma_{\mathbf z, \mathbf x} = \begin{bmatrix}
+	\boldsymbol \Sigma_{\mathbf z \mathbf z} & \boldsymbol \Sigma_{\mathbf z \mathbf x}\\
+	 \boldsymbol \Sigma_{\mathbf x \mathbf z} & \boldsymbol \Sigma_{\mathbf x \mathbf x}
+	\end{bmatrix} = \begin{bmatrix}
+	\frac{\mathbf W^\top\mathbf W}{\sigma^2} + \mathbf I     & -\frac{\mathbf W^\top}{\sigma^2}      \\
+	-\frac{\mathbf W}{\sigma^2}  & \frac{\mathbf I}{\sigma^2} \label{eq:covariance}
+	\end{bmatrix}^{-1}
+\end{equation}
+Using the partitioned inversion lemma(Sherman-Morrison-Woodbury formula), Eq.~(\ref{eq:covariance}) can be convertd to:
+\begin{equation}
+\boldsymbol \Sigma_{\mathbf z, \mathbf x} = \begin{bmatrix}
+\mathbf I & \mathbf W^\top \\
+\mathbf W & \mathbf W \mathbf W^\top + \sigma^2 \mathbf I
+\end{bmatrix}
+\end{equation}
+
+So the marginal distribution is given by:
+\begin{equation}
+p\left(\mathbf x| \theta \right) = \mathcal N \left(\mathbf x|\boldsymbol \mu, \mathbf W \mathbf W^\top + \sigma^2 \mathbf I\right)
+\end{equation}
+thus the likelihood function can be rewritten as:
+\begin{align}
+	L\left(\theta\right) &= \mbox{log}\; p\left(\mathbf x| \theta \right) = \sum_{n=1}^{N} \mbox{log} \; p\left(\mathrm x_n| \theta \right)\\
+	&= -\frac{N}{2}\mbox{log} \left|\mathbf W \mathbf W^\top + \sigma^2 \mathbf I\right| - \frac{1}{2}\sum_{n=1}^{N} \left(\mathrm x_n - \boldsymbol \mu\right)^\top \left(\mathbf W \mathbf W^\top + \sigma^2 \mathbf I\right) \left(\mathrm x_n - \boldsymbol \mu\right) + \mbox{constc}
+\end{align}
+
+\end{document}

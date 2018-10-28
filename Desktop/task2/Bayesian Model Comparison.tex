@@ -1,0 +1,88 @@
+\documentclass{article}
+\title{Bayesian Model Comparison}
+\author{Xinghu Yao}
+\date{\today}
+
+\usepackage{geometry}
+\geometry{a4paper,scale=0.8}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{dsfont}
+
+
+\begin{document}
+	\maketitle
+	\section{Question}
+	The Bayesian view of model comparison simply involves the use of probabilities to represent uncertainty in the choice of model, along with a consistent application of the sum and product rules of probability.
+	Consider a data set $\mathcal{D}$ and a set of models $\{\mathcal{M}_i\}$ having parameters $\{\boldsymbol{\theta}_i\}$. For each model we define a likelihood function $p(\mathcal{D}|\boldsymbol{\theta}_i,\mathcal{M}_i)$. If we introduce a prior $p(\boldsymbol{\theta}_i|\mathcal{M}_i)$ for the various models. Try to approximate the distribution as follows using the Laplace Approximation. 
+	\begin{equation}
+	p(\mathcal{D})=\int p(\mathcal{D}|\boldsymbol{\theta})p(\boldsymbol{\theta}) \text{d}\boldsymbol{\theta}\label{eq:1}
+	\end{equation}
+	Note that in Eq.~(\ref{eq:1}) each $\mathcal{M}_i$ is omitted to keep the notation uncluttered. 
+	\section{The Laplace Approximation}
+	Laplace approximation is a simple but widely used framework which aims to find a Gaussian approximations to a probability density defined over a set of continuous variables. For a given distribution $p(\mathbf{z}) = f(\mathbf{z})/\mathbf{Z}$ defined over an $M$-dimensional space $\mathbf{z}$. At a stationary point $\mathbf{z}_0$ the gradient $\nabla f(\mathbf{z})$ will vanish. We therefor consider a Taylor expansion of ln$f(\mathbf{z})$ centred on the mode $\mathbf{z}_0$ so that
+	\begin{equation}
+	\text{ln}f(\mathbf{z}) \backsimeq \text{ln}f(\mathbf{z}_0)  - \frac{1}{2}(\mathbf{z}-\mathbf{z}_0)^T\mathbf{A}(\mathbf{z}-\mathbf{z}_0)
+	\end{equation}
+	Where the $M \times M$ Hessian matrix $A$ is defined by 
+	\begin{equation}
+	\mathbf{A} = -\nabla \nabla \text{ln}f(\mathbf{z})|_{\mathbf{z}=\mathbf{z}_0}
+	\end{equation}
+	and $\nabla$ is the gradient operator. Taking the exponential of both sides we obtain
+	\begin{equation}
+	f(\mathbf{z}) \backsimeq f(\mathbf{z}_0)\text{exp}\left\{-\frac{1}{2}(\mathbf{z}-\mathbf{z}_0)^T\mathbf{A}(\mathbf{z}-\mathbf{z}_0)\right\}
+	\end{equation}
+	The distribution $q(\mathbf{z})$ is proportional to $f(\mathbf{z})$ and the appropriate normalization coefficient can be found by using the standard result for a normalized multivariate Gaussian, giving
+	\begin{equation}
+	q(\mathbf{z}) = \frac{|\mathbf{A}|^{1/2}}{(2\pi)^{M/2}}\text{exp}\left\{-\frac{1}{2}(\mathbf{z}-\mathbf{z}_0)^T\mathbf{A}(\mathbf{z}-\mathbf{z}_0)\right\} = \mathcal{N}(\mathbf{z}|\mathbf{z}_0,\mathbf{A}^{-1})
+	\end{equation}
+	where $|\mathbf{A}|$ denotes the determinant of $\mathbf{A}$. This Gaussian distribution will be well defined provided its precision matrix, given by $A$, is positive definite, which implies that the stationary point $\mathbf{z}_0$ must be a local maximum, not a minimum of a saddle point. In fact, we can also obtain an approximation to the normalization $Z$. Because we have
+	\begin{equation}
+	q(\mathbf{z}) \backsimeq p(\mathbf{\mathbf{z}}) = \frac{1}{Z}f(\mathbf{z})
+	\end{equation} 
+	Thus, the approximation to the normalization constant $Z$ have the following form
+	\begin{equation}
+	Z \backsimeq \frac{f(\mathbf{z})}{q(\mathbf{z})} = f(\mathbf{z}_0)\frac{(2\pi)^{M/2}}{|\mathbf{A}|^{1/2}} \label{eq:7}
+	\end{equation}
+	\section{Solution}
+	Identifying $f(\boldsymbol{\theta}) = p(\mathcal{D}|\boldsymbol{\theta})p(\boldsymbol{\theta})$ and $Z = p(\mathcal{D})$. According to Eq.~(\ref{eq:7}), we have
+	\begin{align}
+	\text{ln}p(\mathcal{D}) = \text{ln}(Z) &\backsimeq \text{ln}f(\mathbf{z}_0)\frac{(2\pi)^{M/2}}{|\mathbf{A}|^{1/2}}\notag\\ 
+	&= \text{ln}p(\mathcal{D}|\boldsymbol{\theta}_{\text{MAP}}) + \text{ln}p(\boldsymbol{\theta}_{\text{MAP}}) + \frac{M}{2}\text{ln}(2\pi) - \frac{1}{2}\text{ln}|\mathbf{A}|\label{eq:8}
+	\end{align}
+	where $\boldsymbol{\theta}_{\text{MAP}}$ is the value of $\boldsymbol{\theta}$ at the mode of the posterior distribution, and $\mathbf{A}$ is the Hessian matrix of second derivatives of the negative log posterior
+	\begin{equation}
+	\mathbf{A} = -\nabla\nabla\text{ln}p(\mathcal{D}|\boldsymbol{\theta}_\text{MAP})p(\boldsymbol{\theta}_{\text{MAP}})=-\nabla\nabla\text{ln}p(\boldsymbol{\theta}_{\text{MAP}}|\mathcal{D}) \label{eq:9}
+	\end{equation}
+	From Eq.~(\ref{eq:9}), we have 
+	\begin{align}
+	\mathbf{A} &= -\nabla\nabla\text{ln}p(\mathcal{D}|\mathbf{\theta}_{\text{MAP}})p(\theta_{MAP})\notag\\
+	&= \mathbf{H} - \nabla\nabla\text{ln}p(\boldsymbol{\theta}_{\text{MAP}})
+	\end{align}
+	and if $p(\boldsymbol{\theta}) = \mathcal{N}(\boldsymbol{\theta}|\mathbf{m},\mathbf{V}_0)$, this becomes
+	\begin{equation}
+	\mathbf{A} = \mathbf{H} + \mathbf{V}_0^{-1}.
+	\end{equation} 
+	If we assume that the proir is broad or equivalently that the number of data points is large, we can neglect the term $\mathbf{V}_0^{-1}$ compared to $\mathbf{H}$. 
+	Using this result, Eq.~(\ref{eq:8}) can be rewritten in the form
+	\begin{equation}
+	\text{ln}p(\mathcal{D}) \backsimeq \text{ln}p(\mathcal{D}|\boldsymbol{\theta}_{\text{MAP}})-\frac{1}{2}(\boldsymbol{\theta}_{\text{MAP}}-\mathbf{m})^T\mathbf{V}_0^{-1}(\boldsymbol{\theta}_{\text{MAP}}-\mathbf{m})-\frac{1}{2}\text{ln}|\mathbf{H}|+\text{const}\label{eq:12}
+	\end{equation}
+	We now again invoke the broad prior assumption, allowing us to neglect the second term on the right hand side of Eq.~(\ref{eq:12}). Since we assume i.i.d data, $\mathbf{H}=-\nabla\nabla\text{ln}p(\mathcal{D}|\boldsymbol{\theta}_{\text{MAP}})$ consists of a sum of terms, one term for each datum, and we can consider the following approximation:
+	\begin{equation}
+	\mathbf{H} = \sum\limits_{n=1}^{N}\mathbf{H}_n=N\widehat{\mathbf{H}}
+	\end{equation}
+	where $\mathbf{H}_n$ is the contribution from the $n^{\text{th}}$ data point and
+	\begin{equation}
+	\widehat{\mathbf{H}} = \frac{1}{N}\sum\limits_{n=1}^{N}\mathbf{H}_n
+	\end{equation}
+	Combining this with the properties of the determinant, we have 
+	\begin{equation}
+	\text{ln}|\mathbf{H}| = \text{ln}|N\widehat{\mathbf{H}}| = \text{ln}\left(N^M|\widehat{\mathbf{H}}|\right) = M\text{ln}N + \text{ln}|\widehat{\mathbf{H}}|
+	\end{equation}
+	Where $M$ is the dimensionality of $\boldsymbol{\theta}$. Note that we are assuming that $\widehat{\mathbf{H}}$ has full rank $M$. Finally, using this result together Eq.~(\ref{eq:12}), we obtain 
+	\begin{equation}
+	\text{ln}p(\mathcal{D}) \backsimeq \text{ln}p(\mathcal{D}|\boldsymbol{\theta}_{\text{MAP}}) - \frac{1}{2}M\text{ln}N
+	\end{equation}
+    \end{document}
