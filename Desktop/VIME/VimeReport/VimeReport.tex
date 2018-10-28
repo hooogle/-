@@ -1,0 +1,221 @@
+\documentclass{article}
+\title{Variational Information Maximizing Exploration}
+\author{Xinghu Yao}
+\date{\today}
+
+\usepackage{geometry}
+\geometry{a4paper,scale=0.8}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage{dsfont}
+
+
+\begin{document}
+	\maketitle
+	\section{Exploration and Exploitation}
+	Reinforcement learning is learning what to do--how to map situations to actions--so as to maximize numerical reward signal. And reinforcement learning algorithms involve a fundamental choice between Exploration and Exploitation. In exploration, the agent experiments with novel strategies that may improve returns in the long run; in exploitation, it maximizes rewards through behavior that is known to be successful. Variational Information Maximizing Exploration (VIME) is an exploration strategy based on maximizing of information gain about agent's belief of environment dynamics.
+	\section{Intuition of VIME}
+	Usually, there are three different kinds of approaches to exploration:
+	
+	\noindent(1) Random exploration, which explore random actions, such as $\epsilon$-greedy and softmax;
+	
+	\noindent(2) Optimism in the face of uncertainty, which estimate uncertainty on value and prefer to explore states/actions with highest uncertainty;
+	
+	\noindent(3) Information state space, which consider agent's information as part of its state and lookahead to see how information helps reward.
+	
+	\noindent As a curiosity-driven strategy, VIME makes use of information gain about the agent's internal belief of the dynamics model as a driving force. We can model the environment dynamics by a probability model and the agent must take actions to  maximize the information gain about the environment dynamics. Fig.1(a) shows the relationship between two variables $X$ and $Y$.  
+	
+	\begin{figure}[h]
+		\begin{minipage}[t]{0.5\linewidth}%设定图片下字的宽度，在此基础尽量满足图片的长宽
+			\centering
+			\includegraphics[scale = 0.4]{mutual-information.png}
+			\caption*{(a) mutual information of X and Y.}
+		\end{minipage}\label{fig1}
+		\begin{minipage}[t]{0.5\linewidth}%需要几张添加即可，注意设定合适的linewidth
+			\centering
+			\includegraphics[scale = 0.4]{fig1b.png}
+			\caption*{(b) Mutual information of two environment.}
+			\label{fig2}
+		\end{minipage}
+		\caption{Mutual Information.}%n张图片共享的说明
+	\end{figure}
+	
+	\noindent Maximizing the reduction in uncertainty about the dynamics can be formalized as maximizing reduction of entropy
+	\begin{equation}
+	H(p(\text{oldenv})) - H(p(\text{newenv}))
+	\end{equation}
+	where $p(\text{oldenv})$ and $p(\text{newenv})$ represent the distribution of old environment dynamics and new environment dynamics after the action. This is shown in Fig.1(b) where the difference between the larger circle and the smaller circle can be seen as the information gain of the action.
+	\section{Methodology}
+	\subsection{Preliminaries}
+	\noindent This paper assumes a finite-horizon discounted Markov decision process (MDP) defined by  $(S,A,P,r,\rho_0,\gamma,T),$ in which $S\subseteq\mathds{R}^n$ is a state set, $A\subseteq\mathds{R}^m$ an action set, $P:S\times A\times S \rightarrow \mathds{R}_{\geq0}$ a transition probability distribution, $r:S\times A \rightarrow \mathds{R}_{\geq0}$ a bounded reward function, $\rho_0: S\rightarrow\mathds{R}_{\geq0}$ an initial state distribution, $\gamma\in(0,1]$ a discount factor, and $T$ the horizon. States and actions viewed as random variables are abbreviated as $S$ and $A$. The presented models are based on the optimization of a stochastic policy $\pi_a: S\times A\rightarrow \mathds{R}_{\geq 0}$, parametrized by $\alpha$. Let $\mu(\pi_a)$ denote its expected discounted return: $\mu(\pi_a) = \mathds{E}_{\tau}[E_{t=0}^T\gamma^tr(s_t,a_t)]$, where $\tau = (s_0,a_0,...)$ denotes the whole trajectory, $s_0\sim\rho_0(s_0),a_t\sim\pi_{\alpha}(a_t|s_t)$, and $s_{t+1}\sim P(s_{t+1}|s_t,a_t)$.
+	\subsection{Curiosity}
+	\noindent The agent models the environment dynamics via a model $p(s_{t+1}|s_t,a_t;\theta)$, parameterized by the random variable $\theta$ with values $\theta \in \Theta$. Assuming a prior $p(\theta)$, it maintains a distribution over dynamic model through a distribution over $\theta$, which is updated in a Bayesian manner. The history of the agent up until time step $t$ is denoted as $\xi_t = {s_1,a_1,...,s_t}$. According to curiosity-driven exploration, the agent should take actions that maximize the reduction in uncertainty about the dynamics. This can be formalized as maximizing reduction of entropy
+	\begin{equation}
+	H(\Theta|\xi_t,a_t) - H(\Theta|S_{t+1},\xi_t,a_t)\label{eq:2}
+	\end{equation}
+	through action $a_t$. According to information theory, Eq.~(\ref{eq:2}) equals to the mutual information $I(S_{t+1};\Theta|\xi_t,a_t)$ and we have the following equations
+	\begin{align}
+	I(S_{t+1};\Theta|\xi_t,a_t) &= \sum_{s_{t+1},\theta}p(s_{t+1},\theta|\xi_t,a_t)\text{log}\frac{p(s_{t+1},\theta|\xi_t,a_t)}{p(s_{t+1}|\xi_t,a_t)p(\theta|\xi_t,a_t)}\notag\\ &=\sum_{s_{t+1}}p(s_{t+1}|\xi_t,a_t)\sum_{\theta}p(\theta|s_{t+1},\xi_t,a_t)\text{log}\frac{p(\theta|\xi_t,a_t,s_{t+1})}{p(\theta|\xi_t,a_t)}\notag\\
+	&= \sum_{s_{t+1}}p(\theta|\xi_t,a_t)D_\mathds{KL}\left[p(\theta|\xi_t,a_t,s_{t+1})\|p(\theta|\xi_t,a_t)\right]\notag\\
+	&= \mathds{E}_{s_{t+1}\sim p(\cdot|\xi_t,a_t)}\left[D_\mathds{KL}\left[p(\theta|\xi_t,a_t,s_{t+1})\|p(\theta|\xi_t,a_t)\right]\right],\label{eq:3}
+	\end{align}
+	the KL divergence from the agent's new belief over the dynamics model to the old one, taking expectation over all possible next states according to the true dynamics $P$. This KL divergence can be interpreted as information gain.
+	By adding $T(s_{t+1},\Theta|\xi_t,s_t)$ as a term of intrinsic reward to the external reward given by the environment dynamics, we can get the following trade-off between exploitation and exploration:
+	\begin{equation}
+	r'(s_t,a_t,s_{t+1}) = r(s_t,a_t) + \eta D_\mathds{KL}\left[p(\theta|\xi_t,a_t,s_{t+1})\|p(\theta|\xi_t,a_t)\right]\label{eq:4},
+	\end{equation} 
+	with $\eta\in\mathds{R}_+$ a hyperparameter controlling the urge to explore. In conclusion, the biggest practical issue with maximizing information gain for exploration is that the computation of Eq.~(\ref{eq:4}) requires calculating the posterior $p(\theta|\xi_t,a_t,s_{t+1})$, which is generally intractable.
+	\section{Variational Bayes}
+	To facilitate the subsequent discussion under a probabilistic framework, we make the following assumptions:
+	
+	\textbf{Assumption 1.} The models of the environment under consideration are fully described by a random element $\Theta$ which depends solely on the environment. Moreover, the agent's initial knowledge about $\Theta$ is summarized by a prior density $p(\theta).$
+	
+	\textbf{Assumption 2:} The agent is equipped with a conditional predictor $p(s_{t+1}|\xi_t,a_t;\theta)$, i.e. the agent is capable of refining its prediction in the light of information about $\Theta$.
+	
+	\noindent We can derive the posterior distribution given a new state-action pair through Bayes' rule as
+	\begin{align}
+		p(\theta|\xi_t,a_t,s_{t+1}) &=\frac{p(s_{t+1},\theta|\xi_t,a_t)}{p(\xi_t,a_t,s_{t+1})}\notag\\ 
+		&=\frac{p(\theta|\xi_t,a_t)p(s_{t+1}|\xi_t,a_t;\theta)}{\int_{\theta}p(s_{t+1}|\xi_t,a_t;\theta)p(\theta|\xi_t,a_t)}.
+	\end{align}
+	 Notice that knowing the action without subsequent observation cannot change the agent's state of knowledge about $\Theta$, so we have $p(\theta|\xi_t,a_t) = p(\theta|\xi_t)$. The integral $\int_{\theta}p(s_{t+1}|\xi_t,a_t;\theta)p(\theta|\xi_t,a_t)$ tends to be intractable when using highly parametrized models (e.g., neural networks), which are often needed to accurately capture the environment model in high-dimensional continuous control.
+	 
+	 \noindent Herein, we embrace the fact that calculating the posterior $p(\theta|D)$ for a data set $D$ is intractable. Instead we approximate it through an alternative distribution $q(\theta;\phi)$, parameterized by $\phi$, and by minimizing $D_{\mathds{KL}}[q(\theta;\phi)\|p(\theta|D)]$. We can derive the following equations:
+	 \begin{align}
+	 \mathop{\text{argmin}}\limits_{\phi}&D_{\mathds{KL}}[q(\theta;\phi)\|p(\theta|D)]\notag\\ &= \mathop{\text{argmax}}\limits_{\phi}{\text{ELBO}}\notag\\
+	 &=\mathop{\text{argmax}}_\phi\int_{\theta}q(\theta;\phi)\text{log}\frac{p(\theta,D)}{q(\theta;\phi)}\notag\\
+	 &\mathop{=}\limits^{p(\theta,D) = p(\theta)p(D|\theta)} \mathop{\text{argmax}}_{\phi}\left\{\int_{\theta} q(\theta;\phi)\text{log}p(D|\theta)-\int_{\theta} q(\theta;\phi)\text{log}\frac{q(\theta;\phi)}{p(\theta)}\right\}\notag\\
+	 &= \mathop{\text{argmax}}\limits_{\phi}\left\{\mathds{E}_{\theta \sim q(\cdot;\phi)}[\text{log}p(D|\theta)]-D_{KL}[q(\theta;\phi)\|p(\theta)]\right\}.
+	 \end{align}
+	 \noindent Rather than computing information gain in Eq.~(\ref{eq:4}) explicitly, we compute an approximation to it, leading to the following total reward:
+	 \begin{equation}
+	 r'(s_t,a_t,s_{t+1}) = r(s_t,a_t) + \eta D_{KL}[q(\theta;\phi_{t+1})\|q(\theta;\phi_t)]\label{eq:7}
+	 \end{equation}
+	 with $\phi_{t+1}$ the updated and $\phi_t$ the old parameters representing the agent's belief. Natural candidates for parameterizing the agent's dynamics model are Bayesian neural networks (BNNs), as they maintain a distribution over their weights. 
+	 	 \begin{figure}[h]
+	 	 	\begin{minipage}[t]{0.5\linewidth}%设定图片下字的宽度，在此基础尽量满足图片的长宽
+	 	 		\centering
+	 	 		\includegraphics[scale = 0.5]{nn_classic.png}
+	 	 		\caption*{(a) Classic neural network.}
+	 	 	\end{minipage}\label{fig1}
+	 	 	\begin{minipage}[t]{0.5\linewidth}%需要几张添加即可，注意设定合适的linewidth
+	 	 		\centering
+	 	 		\includegraphics[scale = 0.5]{bnn_bayes.png}
+	 	 		\caption*{(b) Bayesian neural network.}
+	 	 		\label{fig2}
+	 	 	\end{minipage}
+	 	 	\caption{Classic NN v.s. BNN.}\label{Fig:2}%n张图片共享的说明
+	 	 \end{figure}
+	 \section{Bayesian neural networks}
+	 The goal of traditional neural is to find an optimal point estimate for the weights. This usually perform well in regions with lots of data but fail to express uncertainty in regions with little or no data, and leading to overconfident decisions. This drawback motivates the application of Bayesian learning to neural networks, introducing probability distributions over the weights. These distributions can be of various in theory. To make our lifes easier and to have an intuitive understanding of the distribution at each weight, we will use a Gaussian distribution. Fig.~(\ref{Fig:2}) shows the difference of this two kind of neural networks.
+	 \subsection{Build objective/loss}
+	 We will use variational inference in order to make the prediction of the posterior tractable. While we cannot model the posterior $p(w|D)$ directly, we try to find the parameters $\theta$ of a distribution on the weights $q(w|\theta)$ (commonly referred as the variational posterior) that minimizes the KL divergence with the true posterior. Formally, this can be expressed as:
+	 \begin{align}
+	 \theta^* &= \mathop{\text{argmin}}\limits_{\theta}D_{\mathds{KL}}[q(w|\theta)\|p(w|D)]\notag\\
+	 &= \mathop{\text{argmin}}\limits_{\theta}\int q(w|\theta)\text{log}\frac{q(w|\theta)}{p(w)p(D|w)}\text{d}w\notag\\
+	 &= \mathop{\text{argmin}}\limits_\theta D_{\mathds{KL}}[q(w|\theta)\|p(w)]-\mathds{E}_{q(w|\theta)}[\text{log}p(D|w)]\label{eq:8}
+	 \end{align}
+	 The resulting loss function, commonly referred to as either variational free energy or expected lower bound (ELBO), has to be minimized and is then given as follows:
+	 \begin{equation}
+	 F(D,\theta) =D
+	 _{ \mathds{KL}}[q(w|\theta)\|p(w)]-\mathds{E}_{q(w|\theta)}[\text{log}p(D|w)]\label{eq:9}
+	 \end{equation}
+	 As one can easily see, the cost function tries to balance the complexity of the data $P(D|w)$ and the simplicity of the prior $P(w)$.
+	 
+	 \noindent Unlike previous work, we do not use the closed form of the complexity cost: not requiring a closed form of the complexity cost allows many more combinations of prior and variational posterior families. Indeed this scheme is also simple to implement and allows prior/posterior combinations to be interchanged. We can approximate this exact cost through a Monte Carlo sampling procedure as follows
+	 
+	 
+	 \begin{equation}
+	 F(D,\theta) \simeq \sum_{i=1}^{n}\left\{\text{log}q(w^{i}|\theta) - \text{log}P(w^{i}) - \text{log}P(D|w^{(i)})\right\}
+	 \end{equation}
+	 where $w^{(i)}$ corresponds to the i-th Monte Carlo sample from the variational posterior $q(w^{(i)}|\theta)$. Note that every term of this approximate cost depends upon on the particular weights drawn from the variational posterior: this is an instance of a variational reduction technique known as common random numbers.
+	 \subsection{Gaussian variational posterior}
+	 Suppose that the variational posterior is a diagonal Gaussian distribution and the BNN weight distribution $q(\theta;\phi)$ is given by the fully factorized Gaussian distribution:
+	 \begin{equation}
+	 q(\theta;\phi) = \prod_{i=1}^{|\Theta|}\mathcal{N}(\theta_i|\mu_i;\delta_i^{2})
+	 \end{equation}
+	 then a sample of the weights $w$ can be obtained by sampling a unit Gaussian, shifting it by a mean $\mu$ and scaling by a standard deviation $\sigma$. We parameterize the standard deviation pointwise as $\sigma = \text{log}(1+\text{exp}(\rho))$ and so $\rho$ is always non-negative. The variational posterior parameters are $\theta = (\mu,\rho)$.
+	 \section{Implementation}
+	 \subsection{KL Divergence for Gaussian distribution}
+	 Firstly, recall that the KL divergence between two distributions $P$ and $Q$ is definedas:
+	 \begin{equation}
+	 D_{\mathds{KL}}(P\|Q) = \mathds{E}_P\left[\text{log}\frac{P}{Q}\right]
+	 \end{equation}
+	 Also, the density function for a multivariate Gaussian distribution with mean $\mu$ and covariance matrix $\Sigma$ is
+	 \begin{equation}
+	 P(x) = \frac{1}{(2\pi)^{n/2}\text{det}(\Sigma)^{1/2}}\text{exp}\left(-\frac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right)
+	 \end{equation}
+	 Now, consider two multivariate Gaussians in $\mathds{R}^n$, $P_1$ and $P_2$, we have
+	 \begin{align}
+	 D_{\mathds{KL}}&(P_1\|P_2)\notag\\
+	 &= \mathds{E}_{P_1}[\text{log}P_1-\text{log}_{P_2}]\notag\\
+	 &= \frac{1}{2}\mathds{E}_{P_1}[-\text{logdet}\Sigma_1-(x-\mu_1)^T\Sigma_1^{-1}(x-\mu_1) + \text{logdet}\Sigma_2 + (x-\mu_2)^T\Sigma_2^{-1}(x-\mu_2)]\notag\\
+	 &= \frac{1}{2}\text{log}\frac{\text{det}\Sigma_2}{\text{det}\Sigma_1} + \frac{1}{2}\mathds{E}_{P_1}[-(x-\mu_1)^T\Sigma_1^{-1}(x-\mu_1)+(x-\mu_2)^T\Sigma_2^{-1}(x-\mu_2)]\notag\\
+	 & = \frac{1}{2}\text{log}\frac{\text{det}\Sigma_2}{\text{det}\Sigma_1} + \frac{1}{2}\mathds{E}_{P_1}\left[-\text{tr}\left(\Sigma_1^{-1}(x-\mu_1)(x-\mu_1)^T\right) + \text{tr}\left(\Sigma_2^{-1}(x-\mu_2)(x-\mu_2)^T\right)\right]\notag\\
+	 & = \frac{1}{2}\text{log}\frac{\text{det}\Sigma_2}{\text{det}\Sigma_1} + \frac{1}{2}\mathds{E}_{P_1}\left[-\text{tr}\left(\Sigma_1^{-1}\Sigma_1\right) + \text{tr}\left(\Sigma_2^{-1}(xx^T-2x\mu_2^T+\mu_2\mu_2^T)\right)\right]\notag\\
+	 & = \frac{1}{2}\text{log}\frac{\text{det}\Sigma_2}{\text{det}\Sigma_1} -\frac{1}{2}n+\frac{1}{2}\text{tr}\left(\Sigma_2^{-1}(\Sigma_1+\mu_1\mu_1^T-2\mu_2\mu_1^T+\mu_2\mu_2^T)\right)\notag\\
+	 &=\frac{1}{2}\left(\text{log}\frac{\text{det}\Sigma_2}{\text{det}\Sigma_1} - n +\text{tr}(\Sigma_2^{-1}\Sigma_1)+\text{tr}(\mu_1^T\Sigma_2^{-1}\mu_1-2\mu_1^T\Sigma_2^{-1}\mu_2+\mu_2^T\Sigma_2^{-1}\mu_2)\right)\notag\\
+	 &= \frac{1}{2}\left(\text{log}\frac{\text{det}\Sigma_2}{\text{det}\Sigma_1} - n +\text{tr}(\Sigma_2^{-1}\Sigma_1)+(\mu_2-\mu_1)^T\Sigma_2^{-1}(\mu_2-\mu_1)\right)\label{eq:14}
+	 \end{align}
+	 \subsection{*2nd order Taylor expansion of KL divergence}
+	 \begin{align}
+	 &D_{\mathds{KL}}\left(p(x;\theta)\|p(x:\theta+\delta\theta)\right)\notag\\
+	 &= \int_{x\sim p(x;\theta)}p(x;\theta)\text{log}\frac{p(x;\theta)}{p(x;\theta+\delta\theta)}\notag\\
+	 &\simeq  \int_{x\sim p(x;\theta)}p(x;\theta)\left(\text{log}\frac{p(x;\theta)}{p(x;\theta)} - \frac{d}{d\theta}\text{log}p(x;\theta)^T\delta\theta-\frac{1}{2}\delta\theta^T\frac{d}{d\theta^2}\text{log}p(x;\theta)\delta\theta\right)\notag\\
+	 &= \int_{x\sim p(x;\theta)}p(x;\theta)\left(-\left(\frac{\frac{\text{d}}{\text{d}\theta}p(x;\theta)}{p(x;\theta)}\right)^T\delta\theta-\frac{1}{2}\delta\theta^T\frac{\text{d}}{\text{d}\theta}\left(\frac{\frac{\text{d}}{\text{d}\theta}p(x;\theta)}{p(x;\theta)}\right)\delta\theta\right)\notag\\
+	 &= \int_{x\sim p(x;\theta)}\left\{p(x;\theta)\left(-\left(\frac{\frac{\text{d}}{\text{d}\theta}p(x;\theta)}{p(x;\theta)}\right)^T\delta\theta-\frac{1}{2}\delta\theta^T\left(\frac{p(x;\theta)\frac{\text{d}^2}{\text{d}\theta^2}p(x;\theta)-\left(\frac{\text{d}p(x;\theta)}{\text{d}\theta}\right)\left(\frac{\text{d}p(x;\theta)}{\text{d}\theta}\right)^T }{p(x;\theta)^2}\right)\delta\theta\right)\right\}\notag\\
+	 &= -\int_{x\sim p(x;\theta)}\frac{\text{d}}{\text{d}\theta}p(x;\theta)^T\delta\theta - \frac{1}{2}\delta\theta^T\int_{x\sim p(x;\theta)}\frac{\text{d}^2}{\text{d}\theta^2}p(x;\theta)\delta\theta +\frac{1}{2}\delta\theta^T\int_{x\sim p(x;\theta)}p(x;\theta)\left(\frac{\frac{\text{d}p(x;\theta)}{\text{d}\theta}}{p(x;\theta)}\right)\left(\frac{\frac{\text{d}p(x;\theta)}{\text{d}\theta}}{p(x;\theta)}\right)^T\delta\theta\notag\\
+	 &=-\left(\frac{\text{d}}{\text{d}\theta}\int_{x\sim p(x;\theta)}p(x;\theta)\right)^T\delta\theta - \frac{1}{2}\delta\theta^T\left(\frac{\text{d}^2}{\text{d}\theta^2}\int_{x\sim p(x;\theta)}p(x;\theta)\right)\delta\theta\notag\\
+	 &\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad\quad
+	 + \frac{1}{2}\delta\theta^T\left(\int_{x\sim p(x;\theta)}p(x;\theta)\left(\frac{\text{d}}{\text{d}\theta}\text{log}p(x;\theta)\right)\right)\left(\frac{\text{d}}{\text{d}\theta}\text{log}p(x;\theta)\right)^T\delta\theta\notag\\
+	 &= -\left(\frac{\text{d}}{\text{d}\theta}\mathds{I}\right)^T\delta\theta - \frac{1}{2}\delta\theta^T\left(\frac{\text{d}}{\text{d}\theta^2}\mathds{I}\right)\delta\theta + \frac{1}{2}\delta\theta^T\left(\int_{x\sim p(x;\theta)}p(x;\theta)\left(\frac{\text{d}}{\text{d}\theta}\text{log}p(x;\theta)\right)\right)\left(\frac{\text{d}}{\text{d}\theta}\text{log}p(x;\theta)\right)^T\delta\theta\notag\\
+	 &= -\mathbf{0-0}+ \frac{1}{2}\delta\theta^T\left(\int_{x\sim p(x;\theta)}p(x;\theta)\left(\frac{\text{d}}{\text{d}\theta}\text{log}p(x;\theta)\right)\right)\left(\frac{\text{d}}{\text{d}\theta}\text{log}p(x;\theta)\right)^T\delta\theta\notag\\
+	 &= \frac{1}{2}\delta\theta^TG(\theta)\delta\theta
+	 \end{align}
+	 $G(\theta)=$ Fisher information matrix, which is independent of the choice of parameterization of the class of distribution.\\
+	 \noindent Nature gradient  $g_N = $ the direction with highest increase in the objective per change in KL divergence.
+	 \begin{align}
+	 g_N &= \mathop{\text{argmax}}\limits_{\delta\theta:\mathds{KL}(p(\tau;\theta)\|p(\tau;\theta + \delta\theta))\leq \epsilon}f(\theta + \delta\theta)\notag\\
+	 &\simeq \mathop{\text{argmax}}\limits_{\delta\theta:\mathds{KL}(p(\tau;\theta)\|p(\tau;\theta + \delta\theta))\leq \epsilon}f(\theta) + \nabla_{\theta}f(\theta)^T\delta\theta\notag\\
+	 &= \mathop{\text{argmax}}\limits_{\delta\theta:\mathds{KL}(p(\tau;\theta)\|p(\tau;\theta + \delta\theta))\leq \epsilon}\nabla_{\theta}f(\theta)^T\delta\theta\notag\\
+	 &= G(\theta)^{-1}\nabla_\theta f(\theta)
+	 \end{align} 
+	 It is worthy to say that we don't use the results of this section in the paper of VIME.
+	 \subsection{Newton's Method}
+	 In contrast to first-order methods, second-order methods make use of second order derivatives to improve optimization. The most widely used second-order methods is Newton's method. 
+	 
+	 \noindent Newton's method is an optimization scheme based on using a second-order Taylor series expansion to approximate $J(\theta)$ near some points $\theta_0$ ignoring derivatives of higher order"
+	 \begin{equation}
+	 J(\theta)\simeq J(\theta_0) + (\theta - \theta_0)^T\nabla_\theta J(\theta_0)+\frac{1}{2}(\theta - \theta_0)^TH(\theta - \theta_0),
+	 \end{equation} 
+	 where $H$ is the Hessian of $J$ with respect to $\theta$ evaluated at $\theta_0$. If we then solve for the critical point of this function, we obtain the Newton parameter update rule:
+	 \begin{equation}
+	 \theta^* = \theta_0 - H^{-1}\nabla_{\theta}J(\theta_0).
+	 \end{equation}
+	 Thus for a locally quadratic function (with positive definite H), by rescaling the gradient by $H^{-1}$, Newton's method jumps directly to the minimum, If the objective function is convex but not quadratic (there are higher-order terms), this update can be iterated.
+	 \subsection{Optimization}
+	 The posterior distribution of the dynamics parameter, which is needed to compute the KL divergence in the total reward function $r'$ of Eq.~(\ref{eq:4}), can be compute through the following minimization
+	 \begin{equation}
+	 \phi' = \mathop{\text{argmin}}_{\phi}\left[\overbrace{\underbrace{D_{\mathds{KL}}[q(\theta;\phi)\|q(\theta;\phi_{t-1})}_{l_{\mathds{KL}(q(\theta;\phi))}]}-\mathds{E}_{\theta\sim q(\cdot;\phi)}[\text{log}p(s_t|\xi_{t-1},a_t;\theta)]}^{l(q(\theta;\phi),s_t)}\right],\label{eq:16}
+	 \end{equation}
+	 where we replace the expectation over $\theta$ with samples $\theta\sim q(\cdot;\phi)$. Because we only update the model periodically based on samples drawn from the replay poll, this optimization can be performed in parallel for each $s_t$, keeping $\phi_{t-1}$ fixed. Once $\phi'$ has been obtained, we can use it to compute the intrinsic reward.
+	 To optimize Eq.~(\ref{eq:16}) efficiently, we only take a single second-order step. This way, the gradient is rescaled according to the curvature of the KL divergence at the origin. As such, we compute $D_{\mathds{KL}}[q(\theta;\phi+\lambda\Delta\phi)\|q(\theta;\phi)]$, with the update step $\Delta\phi$ defined as
+	 \begin{equation}
+	 \Delta{\phi} = H^{-1}(l)\nabla_\phi l(q(\theta;\phi),s_t),
+	 \end{equation}
+	 in which $H(l)$ is the Hessian of $l(q(\theta;\phi),s_t)$. Since we assume that the variational approximation is a fully factorized Gaussian, the KL divergence from posterior to prior has a particularly simple form according to Eq.~(\ref{eq:14}):
+	 \begin{equation}
+	 D_{\mathds{KL}}[q(\theta;\phi)\|q(\theta;\phi')] = \frac{1}{2}\sum_{i=1}^{|\Theta|}\left(\left(\frac{\sigma_i}{\sigma_{i}^{'}}\right)^2+2\text{log}\sigma_i^{'}-2\text{log}\sigma_i+\frac{(\mu_u^{'}-\mu_i)}{\sigma_i^{'2}}\right)-\frac{|\Theta|}{2}.\label{eq:21}
+	 \end{equation}
+	 Because this KL divergence is approximately quadratic in tis parameters and the log-likelihood term can be seen as local linear compared to this highly curved KL term, we approximate $H$ by only calculate it for the term KL term $l_{\mathds{KL}}(q(\theta;\phi))$. This can be computed very efficiently in case of a fully factorized Gaussian distribution, as this approximation becomes a diagonal matrix. Looking at Eq.~(\ref{eq:21}), we can calculate the following Hessian at the origin. The $\mu$ and $\rho$ entries are defined as
+	 \begin{equation}
+	 \frac{\partial^2l_\mathds{KL}}{\partial\mu_i^2} = \frac{1}{log^2(1+e^{\rho_i})}\quad\quad\text{and}\quad\quad\frac{\partial^2l_\mathds{KL}}{\partial\rho_i^2} = \frac{2e^{2\rho_i}}{(1 + e^{\rho_i})^2}\frac{1}{\text{log}^2(1+e^{\rho_i})},
+	 \end{equation}
+	 while all other entries are zero. Furthermore, it is also possible to approximate the KL divergence through a second-order Taylor expansion as $\frac{1}{2}\Delta\phi H\Delta\phi=\frac{1}{2}(H^{-1}\nabla)^TH(H^(-1)\nabla)$, since both the value and gradient of the Kl divergence are zero at the origin. This gives us
+	 \begin{equation}
+	 D_\mathds{KL}[q(\theta;\phi + \lambda\Delta\phi)\|q(\theta;\phi)] \simeq \frac{1}{2}\lambda^2\nabla_\phi l^TH^{-1}(l_\mathds{KL})\nabla_\phi l
+	 \end{equation}
+	 Note that $H^{-1}(l_\mathds{KL})$ is diagonal, so this expression can be computed efficiently.
+\end{document}
