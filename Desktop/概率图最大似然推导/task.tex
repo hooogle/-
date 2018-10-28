@@ -1,0 +1,33 @@
+\documentclass[letterpaper,a5paper, 12 pt]{article}
+\usepackage{amsmath}
+
+
+\begin{document}
+\noindent \textbf{Question}:
+
+\noindent Considering The graphical model $z \rightarrow x$ where $z$ and $x$ are two random variables. And the joint distribution of $x,z$ can be given as follows:$$P(x,z) = P(z)P(x|z)$$Where $z$ is a latent variable. If we assume $p(z) = N(z|\boldsymbol{0},\boldsymbol{I})$ and $x = \boldsymbol{Wz} + \boldsymbol{\mu} + \epsilon.$ The dimension of each sample is $D$, $\boldsymbol{\mu}$ is the mean vector of random variable $x$ and $\epsilon\sim N(\boldsymbol{0},\sigma^{2}\boldsymbol{I})$. Denote $\boldsymbol{X}$ as data matrix. Try to derive the maximum likelihood form of variable $x$.
+
+\noindent \textbf{solution}:
+
+If $P(x,z) = P(z)P(x|z)$, then we have $p(x) = \int{p(x|z)p(z)dz}$. And we can get:
+\begin{align*}
+E[x] &= \int_{-\infty}^{+\infty}xf_X(x)dx = \int_{-\infty}^{+\infty}x[\int_{-\infty}^{+\infty}f_Z(z)f_{X|Z}(x|z)dz]dx\\
+&= \int_{-\infty}^{+\infty}\{[\int_{-\infty}^{+\infty}xf_{(X|Z)}(x|z)dx]\}f_Z(z)dz \\&= E_{z}[E_{x}[x|z]]= E_{z}[\boldsymbol{Wz} + \mu]
+\end{align*}
+\begin{align*}
+Var[x] &= E_z\{E_x(x^2|z) -E_x^2(x|z)\}\\&=E[x^2]-E_z[E_x^2(x|z)]+E_z[E_x^2[x|z]]-E_z^2(E_x[x|z])\\
+&= E_{z}[Var_{x}[x|z]] + Var_{z}[E_{x}[x|z]]\\
+       &= E_{z}[\sigma^{2}\boldsymbol{I}] + Var_{z}[\boldsymbol{Wz} + \mu] 
+       = \sigma^{2}\boldsymbol{I} + \boldsymbol{WW}^{T}
+\end{align*}
+Thus, $p(x) = N(x|\mu,\boldsymbol{WW}^T + \sigma^2\boldsymbol{I})$, which lead to $P(\boldsymbol{X}|\mu,\boldsymbol{W},\sigma^2)=
+\prod\limits_{n=1}^{N}p(x_n|\\\mu,\boldsymbol{W},\sigma^2)$. The log likelihood function can be written as:
+\begin{align*}
+logp(\boldsymbol{X}|\mu,\boldsymbol{W},\sigma^2)
+&= \sum\limits_{n=1}^{N}p(x_{n}|\mu,\boldsymbol{W},\sigma^2)\\
+&= -\frac{ND}{2}log(2\pi) - \frac{N}{2}log|\boldsymbol{WW}^T + \sigma^2\boldsymbol{I}|\\
+&- \frac{1}{2}\sum\limits_{n=1}^{n}(x_n - \mu)^T(\boldsymbol{WW}^T + \sigma^2\boldsymbol{I}(x_n - \mu)\\
+&= -\frac{N}{2}\{Dlog(2\pi) + log|\boldsymbol{C}| + Tr(\boldsymbol{C}^{-1}\boldsymbol{S})\}
+\end{align*}
+where $\boldsymbol{C} = \boldsymbol{WW}^T + \sigma^2\boldsymbol{I}$, $\boldsymbol{S} = \frac{1}{N}\sum\limits_{n=1}^{N}(x_n - \mu)(x_n - \mu)^T$
+\end{document}
